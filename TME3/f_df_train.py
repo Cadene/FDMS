@@ -20,9 +20,9 @@ idFrom = int((part-1) * pc * len(ids))
 idTo   = int((part) * pc * len(ids))
 
 print "Total size of dataset:", len(ids)
-print "IdFrom:", idFrom, "IdTo:", idTo
+print "IdFrom:", ids[idFrom], "IdTo:", ids[idTo]
 
-df = df.loc[idFrom:idTo]
+df = df.loc[ids[idFrom]:ids[idTo]]
 
 f_cols = ['radardist_km', 'Ref', 'Ref_5x5_10th', 'Ref_5x5_50th',
        'Ref_5x5_90th', 'RefComposite', 'RefComposite_5x5_10th',
@@ -83,7 +83,7 @@ f_df = pd.DataFrame(index=df.index.unique())
 
 f_df['length'] = df_g.size()
 f_df['radardist_km'] = df_g['radardist_km'].mean() # tous les éléments d'une séquence sont égaux
-f_df['Id'] = df_g['Id']
+f_df['Id'] = df_g['Id'].mean()
 
 for f_name in f_interpolable:
     f_df[f_name + '_nbNaN'] = df_g[f_name + '_isnull'].sum()
