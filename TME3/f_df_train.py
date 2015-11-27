@@ -17,7 +17,10 @@ total_part = 16
 pc = 1. / total_part
 ids = df.index.unique()
 idFrom = int((part-1) * pc * len(ids))
-idTo   = int((part) * pc * len(ids))
+if part != total_part:
+    idTo   = int((part) * pc * len(ids))
+else:
+    idTo = -1
 
 print "Total size of dataset:", len(ids)
 print "IdFrom:", ids[idFrom], "IdTo:", ids[idTo]
@@ -47,7 +50,6 @@ def marshall_palmer(ref, minutes_past):
         valid_time[n] = minutes_past.iloc[n] - minutes_past.iloc[n-1]
     valid_time[-1] = valid_time[-1] + 60 - np.sum(valid_time)
     valid_time = valid_time / 60.0
-
     # sum up rainrate * validtime
     sum = 0
     for dbz, hours in zip(ref, valid_time):
@@ -84,6 +86,7 @@ f_df = pd.DataFrame(index=df.index.unique())
 f_df['length'] = df_g.size()
 f_df['radardist_km'] = df_g['radardist_km'].mean() # tous les éléments d'une séquence sont égaux
 f_df['Id'] = df_g['Id'].mean()
+f_df['Expected'] = df_g['Expected'].mean()
 
 for f_name in f_interpolable:
     f_df[f_name + '_nbNaN'] = df_g[f_name + '_isnull'].sum()
