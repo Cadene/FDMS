@@ -103,15 +103,15 @@ for f_name in f_interpolable:
     for pc in [.1,.3,.5,.7,.9]:
         f_df[f_name + '_qtil_' + str(pc)] = df_g[f_name].quantile(pc)
 
-f_df['Marshall_Palmer_intrpl'] = df_g[['Ref','minutes_past']].apply(process_mp_intrpl)
-df_g_intrpl = df_g[f_interpolable].apply(interpolate).groupby(df.index) 
-for f_name in f_interpolable: 
-    f_df[f_name + '_intrpl_mean'] = df_g_intrpl[f_name].mean()
-    f_df[f_name + '_intrpl_std'] = df_g_intrpl[f_name].std()
-    f_df[f_name + '_intrpl_min'] = df_g_intrpl[f_name].min()
-    f_df[f_name + '_intrpl_max'] = df_g_intrpl[f_name].max()
-    for pc in [.1,.3,.5,.7,.9]:
-        f_df[f_name + '_intrpl_qtil_' + str(pc)] = df_g_intrpl[f_name].quantile(pc)
+#f_df['Marshall_Palmer_intrpl'] = df_g[['Ref','minutes_past']].apply(process_mp_intrpl)
+#df_g_intrpl = df_g[f_interpolable].apply(interpolate).groupby(df.index) 
+#for f_name in f_interpolable: 
+#    f_df[f_name + '_intrpl_mean'] = df_g_intrpl[f_name].mean()
+#    f_df[f_name + '_intrpl_std'] = df_g_intrpl[f_name].std()
+#    f_df[f_name + '_intrpl_min'] = df_g_intrpl[f_name].min()
+#    f_df[f_name + '_intrpl_max'] = df_g_intrpl[f_name].max()
+#    for pc in [.1,.3,.5,.7,.9]:
+#        f_df[f_name + '_intrpl_qtil_' + str(pc)] = df_g_intrpl[f_name].quantile(pc)
 
 f_df.to_csv('./data/f_df_train_' + str(part) + 'on' + str(total_part) + '.csv')
 
