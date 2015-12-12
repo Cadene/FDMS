@@ -1,7 +1,8 @@
 import numpy as np
 import pandas as pd
 
-df = pd.read_csv('./data/train.csv')
+#df = pd.read_csv('./data/train.csv')
+df = pd.read_csv('./data/test.csv')
 df['Id_index'] = df['Id']
 df = df.set_index('Id_index')
 
@@ -23,5 +24,6 @@ df_g = df.groupby(df.index)
 df_id2rm = df_g.apply(rm_null)
 df = df.drop(df_id2rm.values,axis=0)
 
-df.to_csv('./data/train_nnull.csv')
+#df.to_csv('./data/train_nnull.csv')
+df.to_csv('./data/test_nnull.csv')
 

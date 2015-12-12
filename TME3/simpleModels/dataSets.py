@@ -1,3 +1,5 @@
+# coding: utf-8
+
 import numpy as np
 import pandas as pd
 
@@ -88,7 +90,7 @@ Expected1 = pd.DataFrame(dfTrain.groupby('Id').mean()['Expected'])
 convertTime(dfTrain1)
 dfTrain1.drop('Expected', inplace=True)
 dfTrain1.to_csv("./data/xTrain_kdp_zdr.csv",index=False)
-Expected1.to_csv("./data/yTrain_dkp_zdr.csv",index='Id')
+Expected1.to_csv("./data/yTrain_kdp_zdr.csv",index='Id')
 
 dfTest1 = dfTest[['Id', 'minutes_past', 'Kdp', 'Zdr']]
 dfTest1.fillna(dfTest1.mean(), inplace=True)

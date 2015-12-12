@@ -19,17 +19,17 @@ class rainFallRegressor():
         self.a1= 1.
         self.a2=-3.
         self.d =0.
-    def resetKdrZdr(self):
-        self.x1 = 'Kdr'
+    def resetKdpZdr(self):
+        self.x1 = 'Kdp'
         self.x2 = 'Zdr'
-        self.c =60.
-        self.a1=.91
-        self.a2=-1.
+        self.c =37.9
+        self.a1=.89
+        self.a2=-.72
         self.d =0.
-    def resetKdr(self):
-        self.x1 = 'Kdr'
+    def resetKdp(self):
+        self.x1 = 'Kdp'
         self.x2 = None
-        self.c =32.
+        self.c =30.52
         self.a1=.85
         self.a2 = None
         self.d =0.
