@@ -11,12 +11,12 @@ featuresSet="basic"
 
 t_start = time.time()
 
-model = SVR(C=.1)
+model = SVR(C=1)
 
 l_dfTrain = []
 l_dfTest = []
 
-print "Model: SVR(C=.1)"
+print "Model: SVR(C=1)"
 
 for i in xrange(1,17):
     print "Loading dataset basic_" + str(i) + 'sur16 into trainSets...'        

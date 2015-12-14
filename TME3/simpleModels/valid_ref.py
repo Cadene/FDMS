@@ -4,8 +4,9 @@ import pandas as pd
 from model import rainFallRegressor
 
 import time
+import sys
 
-dataset = "ref"
+dataset = sys.argv[1]
 
 print "Model: ", dataset
 
