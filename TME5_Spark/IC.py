@@ -4,6 +4,9 @@ import sys
 
 import numpy as np
 import pickle
+from collections import defaultdict
+import random
+import time
 
 from pyspark import SparkContext
 
@@ -37,15 +40,38 @@ def maximization(episode_p, preds):
     times = list(np.unique(episode[:,1]))
     users = episode[:,0]
     for u,uId in enumerate(users):
-        dminus[uId,:] = dminus[uId,:] + 1
+        dminus[uId,:] = 1
         for v,vId in enumerate(users):
-            dminus[uId, vId] = dminus[uId, vId] - 1
+            dminus[uId, vId] = 0
             if (episode[v,1] > episode[u,1]):
-                dplus[uId, vId] = dplus[uId, vId] + 1
+                dplus[uId, vId] = 1
                 tv = times.index(episode[v,1])
                 theta[uId, vId] = theta[uId, vId] + (preds[vId][uId] / p[tv, v])
-    return np.array([theta, dplus, dminus])
+    return (episode, p, np.array([theta, dplus, dminus]))
 
+def vraisemblance(episode_p_theta_dp_dm, theta, preds):
+    episode = episode_p_theta_dp_dm[0]
+    p       = episode_p_theta_dp_dm[1]
+    dplus   = episode_p_theta_dp_dm[2][1]
+    dminus  = episode_p_theta_dp_dm[2][2]
+    times = list(np.unique(episode[:,1]))
+    users = list(episode[:,0])
+    l = 0
+    log = np.log(theta)
+    colog = np.log(1 - theta)
+    for u,uId in enumerate(users):
+        for vId in range(len(theta[uId])):
+            if uId in preds[vId]:
+                if dplus[uId, vId] == 1:
+                    v = users.index(vId)
+                    tv = times.index(episode[v,1])
+                    div = (preds[vId][uId] / p[tv, v])
+                    l += (div * log[uId, vId] + ((1 - div) * colog[uId, vId]))
+                if dminus[uId, vId] == 1:
+                    l += colog[uId, vId]
+    return l
+    
+# MAP ----------------------------------------------------------------------
 def inference(s0, succs):
     infected = defaultdict(bool)
     s = []
@@ -62,7 +88,7 @@ def inference(s0, succs):
         t = t + 1
     return s, infected
 
-def predict(s0, succs, nIter=10000):
+def predict(s0, succs, nIter=100):
     suminfected = defaultdict(float)
     for i in xrange(nIter):
         _, infected = inference(s0, succs)
@@ -72,7 +98,7 @@ def predict(s0, succs, nIter=10000):
         suminfected[j] = suminfected[j] / nIter
     return suminfected
 
-def score(episode, succs):
+def scoreMAP(episode, succs):
     times = np.unique(episode[:,1])
     users = episode[:,0]
     sources = users[[episode[:,1] == times[0]]]
@@ -84,13 +110,15 @@ def score(episode, succs):
         if u in users:
             count += 1.0
             scoreEp += count / (i+1)
-    score += scoreEp / len(users)
+    score = scoreEp / len(users)            
     return score
+
+# Main --------------------------------------------------------------------------------
 
 if __name__ == "__main__":
 
-    if len(sys.argv) != 3:
-        print("Usage: IC <file> <iterations>", file=sys.stderr)
+    if len(sys.argv) != 4:
+        print("Usage: IC <file> <iterations> <delta>", file=sys.stderr)
         exit(-1)
 
     sc = SparkContext(appName="PythonIC")
@@ -99,15 +127,40 @@ if __name__ == "__main__":
     succs = pickle.load(open("/Vrac/3000693/FDMS/succs.pkl",'r'))
     
     iterations = int(sys.argv[2])
+    delta = float(sys.argv[3])
 
-    for i in range(iterations):
-        print("On iteration %i" % (i + 1))
+    stop = False
+    it = 0
+    clocks = []
+    while not stop:
+        #clockstart = time.clock()
+        clockstart = time.time()
         episodes_p = episodes.map(lambda x:expectation(x, preds))
-        theta_dp_dm = episodes_p.map(lambda x:maximization(x, preds))
-        theta_dp_dm = theta_dp_dm.reduce(lambda x,y:x+y)
-        theta = theta_dp_dm[0] / (theta_dp_dm[1] + theta_dp_dm[2])
+        episode_p_theta_dp_dm = episodes_p.map(lambda x:maximization(x, preds))
+        theta_dp_dm = episode_p_theta_dp_dm.map(lambda x:x[2])
+        sum_theta_dp_dm = theta_dp_dm.reduce(lambda x,y:x+y)
+        theta = sum_theta_dp_dm[0] / (sum_theta_dp_dm[1] + sum_theta_dp_dm[2])
+        l = episode_p_theta_dp_dm.map(lambda x:vraisemblance(x, theta, preds))
+        sum_l = l.reduce(lambda x,y:x+y)
+       
         for u in preds:
             for v in preds[u]:
                 preds[u][v] = theta[v,u]
                 succs[v][u] = theta[v,u]
-        scores = 
+        print(it, sum_l)
+        if (it != 0) and ((it == iterations) or (sum_l - prev_sum_l < delta)):
+            stop = True
+        it = it+1
+        prev_sum_l = sum_l
+        #clocks.append(time.clock() - clockstart)
+        clocks.append(time.time() - clockstart)
+    #scores = episodes.map(lambda x:scoreMAP(x,succs))
+    #print(scores.reduce(lambda x,y:x+y) / scores.count())
+
+    print(np.mean(clocks))
+    #    23.85138599999998
+    #[1] 24.3687281609
+    #[4] 15.1469723384
+
+
+
