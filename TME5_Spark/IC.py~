@@ -1,0 +1,22 @@
+import sys
+
+import numpy as np
+from pyspark import SparkContext
+
+def readEpisodes(iterator):
+    episodes = []
+    for episode in list(iterator):
+        ep = episode[:-3]
+        ep = np.array([ept.split(":") for ept in ep.split(";")], float)
+        ep = np.array(ep, int)
+        episodes.append(ep[ep[:,1].argsort()])
+    return np.array(episodes)
+
+if __name__ == "__main__":
+
+    if len(sys.argv) != 3:
+        print("Usage: IC <file> <iterations>", file=sys.stderr)
+        exit(-1)
+
+    sc = SparkContext(appName="PythonLR")
+    episodes = sc.textFile(sys.argv[1]).mapPartitions(readEpisodes).cache()
